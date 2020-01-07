@@ -92,3 +92,11 @@ kubectl delete pod/etcd-master -nkube-system
 ```
 准备工作基本做完了，浏览器访问Prometheus查看
 ![Image text](https://github.com/pornhub91/helm/blob/master/png/prometheus.png)
+
+![Image text](https://github.com/pornhub91/helm/blob/master/png/Prometheus1.png)
+
+![Image text](https://github.com/pornhub91/helm/blob/master/png/grafana.png)
+
+![Image text](https://github.com/pornhub91/helm/blob/master/png/grafana1.png)
+
+![Image text](https://github.com/pornhub91/helm/blob/master/png/grafana2.png)
