@@ -6,7 +6,7 @@
     rm -f /etc/localtime
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
     #配置阿里云时间服务器
-    yum -y install ntp
+    yum -y install ntp &> /dev/null
     ntpdate -u ntp1.aliyun.com
     hwclock -w
 
