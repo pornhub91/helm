@@ -2,16 +2,12 @@
 
 确保K8S组件时间同步无异常，如果没有则先同步时间： 
 
-    #配置阿里云时间服务器
-    sed -i "s^server 0.centos.pool.ntp.org iburst^server ntp1.aliyun.com iburst^g" /etc/chrony.conf
-    sed -i "s^server 1^#server 1^g" /etc/chrony.conf
-    sed -i "s^server 2^#server 2^g" /etc/chrony.conf
-    sed -i "s^server 3^#server 3^g" /etc/chrony.conf
-    sed -i "s^server 4^#server 4^g" /etc/chrony.conf
-    systemctl restart chronyd.service
     #配置亚洲时区
     rm -f /etc/localtime
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+    #配置阿里云时间服务器
+    yum -y install ntp
+    ntpdate -u ntp1.aliyun.com
     hwclock -w
 
 安装helm：
