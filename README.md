@@ -12,6 +12,7 @@
     #配置亚洲时区
     rm -f /etc/localtime
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+    hwclock -w
 
 安装helm：
 
