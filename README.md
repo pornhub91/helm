@@ -105,7 +105,7 @@ kubectl delete pod/etcd-master -nkube-system
 ### 问题记录
 ![问题记录](https://github.com/pornhub91/helm/blob/master/png/error.png)
 搭建后如果出现monitoring/prometheus-prometheus-oper-kube-proxy/0 (0/3 up) 无法监控到的问题，需要更改kube-proxy默认的configmap
-'''
+```
 #查看kube-system名称空间下的configmap
 kubectl get cm -nkube-system
 NAME                                 DATA   AGE
@@ -123,4 +123,4 @@ kubectl edit cm/kube-proxy -nkube-system
     mode: ""
     nodePortAddresses: null
 ...
-'''
+```
