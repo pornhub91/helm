@@ -115,11 +115,12 @@ kube-flannel-cfg                     2      22d
 kube-proxy                           2      22d
 kubeadm-config                       2      22d
 kubelet-config-1.17                  1      22d
+
 #修改configmap
 kubectl edit cm/kube-proxy -nkube-system
 ...
     kind: KubeProxyConfiguration
-    metricsBindAddress: "0.0.0.0:10249"   #10249是默认的proxy metrics监听端口，可能会发生此配置为空的情况，这时需要手动修改为0.0.0.0：10249
+    metricsBindAddress: "0.0.0.0:10249"#10249是默认的proxy metrics监听端口，可能会发生此配置为空的情况，这时需要手动修改为0.0.0.0：10249
     mode: ""
     nodePortAddresses: null
 ...
