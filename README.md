@@ -36,7 +36,7 @@
     #安装Prometheus-Operator
     helm install prometheus --namespace=monitoring ./ --set prometheusOperator.createCustomResource=false
     #卸载命令
-    helm uninstall prometheus --namespace=monitoring ./ 
+    helm uninstall prometheus --namespace=monitoring  
     
 修改端口相关配置：
 
