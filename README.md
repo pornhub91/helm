@@ -102,3 +102,25 @@ kubectl delete pod/etcd-master -nkube-system
 ![Image text](https://github.com/pornhub91/helm/blob/master/png/grafana1.png)
 
 ![Image text](https://github.com/pornhub91/helm/blob/master/png/grafana2.png)
+### 问题记录
+![问题记录](https://github.com/pornhub91/helm/blob/master/png/error.png)
+搭建后如果出现monitoring/prometheus-prometheus-oper-kube-proxy/0 (0/3 up) 无法监控到的问题，需要更改kube-proxy默认的configmap
+'''
+#查看kube-system名称空间下的configmap
+kubectl get cm -nkube-system
+NAME                                 DATA   AGE
+coredns                              1      22d
+extension-apiserver-authentication   6      22d
+kube-flannel-cfg                     2      22d
+kube-proxy                           2      22d
+kubeadm-config                       2      22d
+kubelet-config-1.17                  1      22d
+#修改configmap
+kubectl edit cm/kube-proxy -nkube-system
+...
+    kind: KubeProxyConfiguration
+    metricsBindAddress: "0.0.0.0:10249"   #10249是默认的proxy metrics监听端口，可能会发生此配置为空的情况，这时需要手动修改为0.0.0.0：10249
+    mode: ""
+    nodePortAddresses: null
+...
+'''
