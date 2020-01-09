@@ -78,7 +78,9 @@ spec:
     targetPort: 9104
 ```
 生成相关文件
+
 `kubectl apply -f .`
+### 访问Prometheus，配置grafana绘图
 ![Image text](https://github.com/pornhub91/helm/blob/master/png/MySQL.png)
 ![Image text](https://github.com/pornhub91/helm/blob/master/png/MySQL1.png)
 ![Image text](https://github.com/pornhub91/helm/blob/master/png/MySQL2.png)
