@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  namespace: monitoring
+  name: mysql-metrics
+  labels:
+    k8s-app: node-mysql
+    app: prometheus-operator-prometheus
+    chart: prometheus-operator-8.3.1
+    heritage: Helm
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      k8s-app: node-mysql
+  namespaceSelector:
+    matchNames:
+    - monitoring
+  endpoints:
+  - port: mysql
+    interval: 10s
+    honorLabels: true
