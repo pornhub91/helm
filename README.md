@@ -10,7 +10,7 @@
     ntpdate -u ntp1.aliyun.com
     hwclock -w
 
-安装helm：
+安装helm： 
 
     #下载 Helm 
     wget https://get.helm.sh/helm-v3.0.0-linux-amd64.tar.gz
