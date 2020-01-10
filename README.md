@@ -27,6 +27,7 @@
     helm pull stable/prometheus-operator
     #解压
     tar zxvf prometheus-operator-8.3.2.tgz
+    #以下操作都在此目录执行
     cd prometheus-operator/
     
     #安装CRD：
@@ -37,8 +38,161 @@
     helm install prometheus --namespace=monitoring ./ --set prometheusOperator.createCustomResource=false
     #卸载命令
     helm uninstall prometheus --namespace=monitoring  
-    
-修改端口相关配置：
+
+安装nfs组件以及配置storageclass的依赖项：
+```
+#创建挂载相关目录
+mkdir -p /data/k8s
+
+#所有节点都要安装并启动nfs-utils 
+yum -y install  nfs-utils  rpcbind &> /dev/null
+systemctl restart nfs-utils   
+systemctl restart rpcbind     && systemctl enable rpcbind   
+systemctl restart nfs-server  && systemctl enable nfs-server
+
+
+#创建nfs访问规则
+echo "/data/k8s  *(rw,async,no_root_squash)" >> /etc/exports
+exportfs -r
+
+#检查nfs是否正常
+showmount -e localhost
+```
+
+创建storageclass相关配置文件，先创建nfs-service-account授权
+```
+cat nfs-sa.yaml 
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nfs-client-provisioner
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: nfs-client-provisioner-runner
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["list", "watch", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["create", "delete", "get", "list", "watch", "patch", "update"]
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: run-nfs-client-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: nfs-client-provisioner
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: nfs-client-provisioner-runner
+  apiGroup: rbac.authorization.k8s.io
+```
+
+创建nfs存储,只需要修改对应的主机和挂载目录即可
+```
+cat nfs-client.yaml 
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nfs-client-provisioner
+spec:
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nfs-client-provisioner
+    spec:
+      serviceAccountName: nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          image: quay.io/external_storage/nfs-client-provisioner:latest
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME
+              value: nfs-storage
+            - name: NFS_SERVER
+              value: 192.168.37.10   #修改为nfsIP地址
+            - name: NFS_PATH
+              value: /data/k8s       #路径可自行修改
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: 192.168.37.10 #修改为nfsIP地址
+            path: /data/k8s       #路径可自行修改
+
+```
+创建storageclass，当pod匹配到storageclass时，会自动创建pvc，以下是创建了两个storageclass
+```
+cat nfs-class.yaml 
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: prometheus-nfsclass
+provisioner: nfs-storage
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: grafana-nfsclass
+provisioner: nfs-storage
+```
+### 以下是文件修改相关配置，我会将整个chart上传，如果使用下面的修改无效，直接使用我上传的文件来使用
+
+修改values.yaml里的存储项：
+
+```
+...
+    storageSpec:      #在160817行
+      volumeClaimTemplate:
+        spec:
+          storageClassName: prometheus-nfsclass   #修改为上面创建的class名
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 50Gi   #可以调整存储大小
+...
+
+```
+
+修改grafana的存储项：
+
+```
+...
+persistence:    #1883行
+  type: pvc
+  enabled: true
+  storageClassName: grafana-nfsclass
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+  finalizers:
+    - kubernetes.io/pvc-protection
+...
+```
+修改Prometheus监听端口：
 
     vim values.yaml
     #修改Prometheus监听集群Etcd端口，文件的741行
@@ -78,7 +232,7 @@
      labels: {}
      portName: service
     ... 
-修改配置后更新：
+##### 修改配置后更新：
 
 	helm upgrade prometheus ./ -nmonitoring
 	#Grafana默认密码是：prom-operator
