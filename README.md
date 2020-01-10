@@ -164,6 +164,7 @@ provisioner: nfs-storage
 修改values.yaml里的存储项：
 
 ```
+vim values.yaml
 ...
     storageSpec:      #在160817行
       volumeClaimTemplate:
@@ -180,6 +181,7 @@ provisioner: nfs-storage
 修改grafana的存储项：
 
 ```
+vim charts/grafana/values.yaml
 ...
 persistence:    #1883行
   type: pvc
