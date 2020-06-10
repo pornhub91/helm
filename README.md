@@ -1,46 +1,47 @@
 ## helm安装Prometheus/grafana监控k8s集群信息
 
 确保K8S组件时间同步无异常，如果没有则先同步时间： 
-
-    #配置亚洲时区
-    rm -f /etc/localtime
-    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-    #配置阿里云时间服务器
-    yum -y install ntp &> /dev/null
-    ntpdate -u ntp1.aliyun.com
-    hwclock -w
-
+'''bash
+#配置亚洲时区
+rm -f /etc/localtime
+cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+#配置阿里云时间服务器
+yum -y install ntp &> /dev/null
+ntpdate -u ntp1.aliyun.com
+hwclock -w
+'''
 安装helm： 
-
-    #下载 Helm 
-    wget https://get.helm.sh/helm-v3.0.0-linux-amd64.tar.gz
-    #解压 Helm
-    tar -zxvf helm-v3.0.0-linux-amd64.tar.gz
-    #复制执行文件到 bin 目录下
-    cp linux-amd64/helm /usr/local/bin/
-    #添加官方仓库地址
-    helm repo add stable https://kubernetes-charts.storage.googleapis.com
-    #查看本地已添加的存储库
-    helm search repo stable
+'''bash
+#下载 Helm 
+wget https://get.helm.sh/helm-v3.0.0-linux-amd64.tar.gz
+#解压 Helm
+tar -zxvf helm-v3.0.0-linux-amd64.tar.gz
+#复制执行文件到 bin 目录下
+cp linux-amd64/helm /usr/local/bin/
+#添加官方仓库地址
+helm repo add stable https://kubernetes-charts.storage.googleapis.com
+#查看本地已添加的存储库
+helm search repo stable
+'''
 拉取prometheus镜像：
+'''bash
+helm pull stable/prometheus-operator
+#解压
+tar zxvf prometheus-operator-8.3.2.tgz
+#以下操作都在此目录执行
+cd prometheus-operator/
 
-    helm pull stable/prometheus-operator
-    #解压
-    tar zxvf prometheus-operator-8.3.2.tgz
-    #以下操作都在此目录执行
-    cd prometheus-operator/
-    
-    #安装CRD：
-    kubectl apply -f crds/
-    #创建名称空间：
-    kubectl create namespace monitoring
-    #安装Prometheus-Operator
-    helm install prometheus --namespace=monitoring ./ --set prometheusOperator.createCustomResource=false
-    #卸载命令
-    helm uninstall prometheus --namespace=monitoring  
-
+#安装CRD：
+kubectl apply -f crds/
+#创建名称空间：
+kubectl create namespace monitoring
+#安装Prometheus-Operator
+helm install prometheus --namespace=monitoring ./ --set prometheusOperator.createCustomResource=false
+#卸载命令
+helm uninstall prometheus --namespace=monitoring  
+'''
 安装nfs组件以及配置storageclass的依赖项：
-```
+```bash
 #创建挂载相关目录
 mkdir -p /data/k8s
 
@@ -60,7 +61,7 @@ showmount -e localhost
 ```
 
 创建storageclass相关配置文件，先创建nfs-service-account授权
-```
+```bash
 cat nfs-sa.yaml 
 apiVersion: v1
 kind: ServiceAccount
@@ -105,7 +106,7 @@ roleRef:
 ```
 
 创建nfs存储,只需要修改对应的主机和挂载目录即可
-```
+```bash
 cat nfs-client.yaml 
 kind: Deployment
 apiVersion: apps/v1
@@ -163,7 +164,7 @@ provisioner: nfs-storage
 
 修改values.yaml里的存储项：
 
-```
+```bash
 vim values.yaml
 ...
     storageSpec:      #在160817行
@@ -180,7 +181,7 @@ vim values.yaml
 
 修改grafana的存储项：
 
-```
+```bash
 vim charts/grafana/values.yaml
 ...
 persistence:    #1883行
@@ -240,7 +241,7 @@ persistence:    #1883行
 	#Grafana默认密码是：prom-operator
 	#可以在values.yaml文件里修改：adminPassword: prom-operator
 本次部署使用的是kubeadm安装，安装后etcd的监听在127.0.0.1，修改为监听所有网段
-```
+```bash
 vim /etc/kubernetes/manifests/etcd.yaml
 - --listen-metrics-urls=http://127.0.0.1:2381 修改为：
 - --listen-metrics-urls=http://0.0.0.0:2381
@@ -261,7 +262,7 @@ kubectl delete pod/etcd-master -nkube-system
 ### 问题记录
 ![问题记录](https://github.com/pornhub91/helm/blob/master/png/error.png)
 搭建后如果出现monitoring/prometheus-prometheus-oper-kube-proxy/0 (0/3 up) 无法监控到的问题，需要更改kube-proxy默认的configmap
-```
+```bash
 #查看kube-system名称空间下的configmap
 kubectl get cm -nkube-system
 NAME                                 DATA   AGE
