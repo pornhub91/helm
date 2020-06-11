@@ -1,7 +1,7 @@
 ## helm安装Prometheus/grafana监控k8s集群信息
 
 确保K8S组件时间同步无异常，如果没有则先同步时间： 
-'''bash
+```
 #配置亚洲时区
 rm -f /etc/localtime
 cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
@@ -9,9 +9,9 @@ cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 yum -y install ntp &> /dev/null
 ntpdate -u ntp1.aliyun.com
 hwclock -w
-'''
+```
 安装helm： 
-'''bash
+```
 #下载 Helm 
 wget https://get.helm.sh/helm-v3.0.0-linux-amd64.tar.gz
 #解压 Helm
@@ -24,7 +24,7 @@ helm repo add stable https://kubernetes-charts.storage.googleapis.com
 helm search repo stable
 '''
 拉取prometheus镜像：
-'''bash
+'''
 helm pull stable/prometheus-operator
 #解压
 tar zxvf prometheus-operator-8.3.2.tgz
@@ -39,9 +39,10 @@ kubectl create namespace monitoring
 helm install prometheus --namespace=monitoring ./ --set prometheusOperator.createCustomResource=false
 #卸载命令
 helm uninstall prometheus --namespace=monitoring  
-'''
+```
+
 安装nfs组件以及配置storageclass的依赖项：
-```bash
+```
 #创建挂载相关目录
 mkdir -p /data/k8s
 
